@@ -15,7 +15,7 @@ BlueRedBlack = b'iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAWhElEQVR4Ac3BCbC
 #Example of binary image loading is below:
 
 #In this case using the filename option
-FILENAME = r'C:\\scripts\\OpenCV_AI_Competetion\\project\\wildcat.png'          # if you want to use a file instead of data, then use this in Image Element
+FILENAME = r'C:\\scripts\\OpenCV_AI_Competetion\\project\\BlackBlueRed.png'          # if you want to use a file instead of data, then use this in Image Element
 DISPLAY_TIME_MILLISECONDS = 1000
 
 sg.Window('Window Title', [[sg.Image(FILENAME)]], transparent_color=sg.theme_background_color(), no_titlebar=True, keep_on_top=True).read(timeout=DISPLAY_TIME_MILLISECONDS, close=True)
@@ -31,7 +31,7 @@ def main():
     col1=[ [sg.Text('Sequence A     Sequence B     Sequence C', size=(40, 1), justification='left', font='Helvetica 10')],
              [sg.Image(BlueRedBlack),sg.Image(BlackRedBlue),sg.Image(BlackBlueRed)],
              [sg.Listbox(values=('A - Blue Red Black', 'B - Black Red Blue', 'C - Black Blue Red'), size=(30,5), key='sequence')],
-             [sg.Text('Number of iterations', size=(20, 1), justification='left', font='Helvetica 10')],
+             [sg.Text('Number of Iterations', size=(20, 1), justification='left', font='Helvetica 10')],
              [sg.Listbox(values=('1', '2', '3'), size=(30,5),key='iterations')],
              [sg.Text('Operator', size=(20, 1), justification='left', font='Helvetica 10')],
              [sg.Listbox(values=('Amare','Scott ', 'Seth', 'Zarek'), size=(30,5),key='operator')],

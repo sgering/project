@@ -122,7 +122,7 @@ blob_client = blob_service_client.get_blob_client(in_container,source_file)
 ###########################################################
 
 #working_dir = os.getcwd()
-working_dir = "C:\\scripts\\OpenCV_AI_Competetion\\web_connect_to_video"
+working_dir = "C:\\scripts\\OpenCV_AI_Competetion\\project\\Videos"
 
 print("Current working directory:" + working_dir)
 upload_file_path = os.path.join(working_dir, source_file)
@@ -408,7 +408,7 @@ blob_client = blob_service_client.get_blob_client(in_container,source_file)
 ###########################################################
 
 #working_dir = os.getcwd()
-working_dir = "C:\\scripts\\OpenCV_AI_Competetion\\web_connect_to_video"
+working_dir = "C:\\scripts\\OpenCV_AI_Competetion\\project\\Videos"
 
 print("Current working directory:" + working_dir)
 upload_file_path = os.path.join(working_dir, source_file)
