@@ -237,9 +237,8 @@ print(output_video_name)
 
 ###############################################
 
-#account_name = 'batterytrackerstorage'
+
 account_name = os.getenv("STORAGEACCOUNTNAME")
-#account_key = 'n/dLec34fFKrNoTIl9WabkBP0cud4jjgG+GP1o1T4TyYuEVUqt37H7nXGDzG/3ShqzoOeJbHSss3+AStDCgrqQ=='
 account_key = os.getenv("STORAGEACCOUNTKEY")
 #container_name = 'asset-f928fc26-1431-456f-b314-e7c6f520b405'
 container_name = out_continer
