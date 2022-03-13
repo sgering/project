@@ -329,6 +329,7 @@ with depthai.Device(pipeline) as device:
         
         # at any time, you can press "q" and exit the main loop, therefore exiting the program itself
             if cv2.waitKey(1) & 0xFF == ord('q'):
+                
                 break
             #if cv2.waitKey(1) == ord('q'):
            
@@ -376,3 +377,7 @@ with depthai.Device(pipeline) as device:
     outfile.close()
     #close the database connection
     cursor.close()
+
+    #vid_upload = 'C:\\scripts\\OpenCV_AI_Competetion\\project\\bt_upload_video_store_db.py'
+    #print('Archiving Video to AMS')
+    #exec(open(vid_upload).read())
