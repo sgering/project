@@ -191,12 +191,13 @@ print(job_state.state)
 
 # Check the state of the job every 10 seconds. Adjust time_in_seconds = <how often you want to check for job state>
 def countdown(t):
-    while t: 
-        mins, secs = divmod(t, 60) 
-        timer = '{:02d}:{:02d}'.format(mins, secs) 
-        print(timer, end="\r") 
-        time.sleep(1) 
-        t -= 1
+    #while t: 
+        #mins, secs = divmod(t, 60) 
+        #timer = '{:02d}:{:02d}'.format(mins, secs) 
+        #print(timer, end="\r") 
+        #time.sleep(1) 
+        #t -= 1
+    #print('processing...please wait')
     job_current = client.jobs.get(os.getenv("RESOURCEGROUP"),os.getenv('ACCOUNTNAME'),transform_name,job_name)
     #print(job_current)
     if(job_current.state == "Finished"):

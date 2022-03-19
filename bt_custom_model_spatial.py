@@ -282,14 +282,8 @@ with depthai.Device(pipeline) as device:
                 height = depthData.depthAverage
                 seconds = t_time
                 inlist.append([color,uid,height,seconds])
-                
-                #query = """INSERT INTO [dbo].[bt_actual] ([color],[UID],[height],[seconds])VALUES(%s, '%s',%s,%s)""" %(color,uid,height,seconds)
- 
-                #print(query)
-                #cursor.execute(query)
-                #cnxn.commit()
-                
 
+            
 ################################################
                 counter.append(1)
                 conf = round(detection.confidence * 100,0)

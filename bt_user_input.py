@@ -5,6 +5,7 @@ import numpy as np
 from datetime import datetime
 import pyodbc
 import decouple
+import subprocess
 
 now = datetime.now()
 
@@ -22,13 +23,18 @@ sg.Window('Window Title', [[sg.Image(FILENAME)]], transparent_color=sg.theme_bac
 """
 Demo program that displays a webcam using OpenCV
 """
+def run_program_archive():
+    subprocess.call(["python", "C:\\scripts\\OpenCV_AI_Competetion\\project\\bt_upload_video_store_db.py"])
 
+def run_program_vidscript():
+    subprocess.call(["python", "C:\\scripts\\OpenCV_AI_Competetion\\project\\bt_custom_model_spatial.py"])
+   
 def main():
     
     sg.theme('Black')
-    sz=(10,20)
+    sz=(10,10)
     title = [[sg.Text('Battery Tracker', size=(30, 1), justification='center', font='Helvetica 20')]]
-    col1=[ [sg.Text('Sequence A     Sequence B     Sequence C', size=(40, 1), justification='left', font='Helvetica 10')],
+    col1=[ [sg.Text('Sequence A     Sequence B     Sequence C', size=(40, 1), justification='center', font='Helvetica 10')],
              [sg.Image(BlueRedBlack),sg.Image(BlackRedBlue),sg.Image(BlackBlueRed)],
              [sg.Listbox(values=('A - Blue Red Black', 'B - Black Red Blue', 'C - Black Blue Red'), size=(30,5), key='sequence')],
              [sg.Text('Number of Iterations', size=(20, 1), justification='left', font='Helvetica 10')],
@@ -37,29 +43,21 @@ def main():
              [sg.Listbox(values=('Amare','Scott ', 'Seth', 'Zarek'), size=(30,5),key='operator')],
              [sg.Text('Batch Number', size=(20, 1), justification='left', font='Helvetica 10')],
              [sg.Listbox(values=('Batch 111', 'Batch 222', 'Batch 333'), size=(30,5),key='batch')],
-             [sg.Button('Apply Settings', size=(20, 1), font='Helvetica 14')],#,, sg.Button('Start Session', size=(20, 1), font='Helvetica 14')],
+             [sg.Button('Start BatteryTracker', size=(20, 1), font='Helvetica 14')], [sg.Button('Archive Video', size=(20, 1), font='Helvetica 14')],
              [sg.Text('', size=(60, 1), justification='left', font='Helvetica 10',k='-T-')]]
     
     col2=[[sg.Image(filename='', key='image',size=(30, 2))],
             [sg.Button('Record', size=(10, 1), font='Helvetica 14'),sg.Button('Stop', size=(10, 1), font='Any 14'),sg.Button('Exit', size=(10, 1), font='Helvetica 14'),]]
 
-    layout = [[sg.Column(col1, element_justification='t' )]]
-              # sg.Column(col2, element_justification='c')]]
-
+    layout = [[sg.Column(col1, element_justification='c' )]]
+           
     window =sg.Window("Battery Tracker",layout)
         
-    # cap = cv2.VideoCapture(0)
-    # recording = False
-
-    ##Open an empty file for storing the plan
-    
     while True:
         event, values = window.read(timeout=20)
 
-        if event == 'Apply Settings':
-            #fileout = open('C:\\scripts\\OpenCV_AI_Competetion\\project\\bt_plan_audit.csv','w')
-           # try:
-            #print(values)
+        if event == 'Start BatteryTracker':
+
             operator = values['operator'][0]
             sequence = values['sequence'][0]
             batch = values['batch'][0]
@@ -73,6 +71,7 @@ def main():
 
             cnxn = pyodbc.connect('DRIVER={SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
             cursor = cnxn.cursor()
+
             # Insert Dataframe into SQL Server:
             query = """INSERT INTO [dbo].[bt_plan]([ID],[Batch],[Operator],[Sequence],[StartTime],[EndTime],[Iterations])
                      VALUES(NEWID(),'%s','%s','%s',GETDATE(),GETDATE(),%s)""" %(batch,operator,sequence,count)
@@ -81,39 +80,12 @@ def main():
             cnxn.commit()
             cursor.close()
 
-            vid_script = 'C:\\scripts\\OpenCV_AI_Competetion\\project\\bt_custom_model_spatial.py'
-            exec(open(vid_script).read())
-                
+            run_program_vidscript()
+
+        if event == 'Archive Video': 
+            run_program_archive()
+
         if event == 'Exit' or event == sg.WIN_CLOSED:
             break
-
-        # elif event == 'Record':
-        #     recording = True
-        #     frame_width = int(cap.get(3))
-        #     frame_height = int(cap.get(4))
-        #     path = "C:\\scripts\\OpenCV_AI_Competetion\\UserInterface\\pySimpleGUI\\outpy.avi"
-            
-        #     # Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
-        #     out = cv2.VideoWriter(path,cv2.VideoWriter_fourcc('M','J','P','G'), 10, (frame_width,frame_height))
-
-        # elif event == 'Stop':
-        #     recording = False
-        #     img = np.full((480, 640), 255)
-        #     # this is faster, shorter and needs less includes
-        #     imgbytes = cv2.imencode('.png', img)[1].tobytes()
-        #     window['image'].update(data=imgbytes)
-        #     # When everything done, release the video capture and video write objects
-        #     cap.release()
-        #     out.release()
-
-        #     # Closes all the frames
-        #     cv2.destroyAllWindows()
-
-        # if recording:
-        #     ret, frame = cap.read()
-        #     imgbytes = cv2.imencode('.png', frame)[1].tobytes()  # ditto
-        #     window['image'].update(data=imgbytes)
-
-        #     out.write(frame)
-        
+  
 main()
