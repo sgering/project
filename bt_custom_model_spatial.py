@@ -68,8 +68,11 @@ stereo.setSubpixel(subpixel)
 # Config
 
 #############################################
-topLeft = depthai.Point2f(0.45, 0.45)
-bottomRight = depthai.Point2f(0.5, 0.5)
+#topLeft = depthai.Point2f(0.45, 0.45)
+#bottomRight = depthai.Point2f(0.5, 0.5)
+
+topLeft = depthai.Point2f(0.83, 0.52)
+bottomRight = depthai.Point2f(0.87, 0.57)
 
 config = depthai.SpatialLocationCalculatorConfigData()
 config.depthThresholds.lowerThreshold = 400
