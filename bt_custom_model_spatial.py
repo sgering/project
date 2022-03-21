@@ -281,7 +281,7 @@ with depthai.Device(pipeline) as device:
                 uid = UID
                 height = depthData.depthAverage
                 seconds = t_time
-                inlist.append([color,uid,height,seconds])
+                inlist.append([color,uid,height,seconds,coordinate_xmin,coordinate_ymin])
 
             
 ################################################
@@ -301,7 +301,7 @@ with depthai.Device(pipeline) as device:
                 # and then draw a rectangle on the frame to show the actual result
                 cv2.rectangle(frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 0, 0), 1)
                 cv2.putText(frame, text_label, (bbox[0], bbox[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255), 1)
-                #cv2.putText(frame, coordinate_str, (bbox[0], bbox[1]+10), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,255,255), 1)
+                cv2.putText(frame, coordinate_str, (bbox[0], bbox[1]+10), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,255,255), 1)
 
                 cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color, 1)
                 #cv2.putText(frame, f"X: {int(depthData.spatialCoordinates.x)} mm", (xmin + 10, ymin + 20), fontType, 0.5, 255)
@@ -362,7 +362,7 @@ with depthai.Device(pipeline) as device:
     final = ''
     for rec in inlist:
         
-        query = """INSERT INTO [dbo].[bt_actual] ([color],[UID],[height],[seconds])VALUES(%s,'%s',%s,%s)""" %(rec[0],rec[1],rec[2],rec[3])
+        query = """INSERT INTO [dbo].[bt_actual] ([color],[UID],[height],[seconds],[xcoord],[ycoord])VALUES(%s,'%s',%s,%s,%s,%s)""" %(rec[0],rec[1],rec[2],rec[3],rec[4],rec[5])
         final = final + query +';'
     cursor.execute(final)
     cnxn.commit()
