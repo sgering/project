@@ -47,7 +47,7 @@ xinSpatialCalcConfig = pipeline.create(depthai.node.XLinkIn)
 xoutDepth.setStreamName("depth")
 xoutSpatialData.setStreamName("spatialData")
 xinSpatialCalcConfig.setStreamName("spatialCalcConfig")
-########################################
+################################
 # Properties
 
 monoLeft.setResolution(depthai.MonoCameraProperties.SensorResolution.THE_400_P)
@@ -64,7 +64,7 @@ stereo.setLeftRightCheck(lrcheck)
 stereo.setSubpixel(subpixel)
 
 
-#############################################
+###################################
 # Config the bounding box
 
 topLeft = depthai.Point2f(0.83, 0.52)
@@ -78,7 +78,7 @@ config.roi = depthai.Rect(topLeft, bottomRight)
 spatialLocationCalculator.inputConfig.setWaitForMessage(False)
 spatialLocationCalculator.initialConfig.addROI(config)
 
-###############################################
+###################################
 # Linking
 monoLeft.out.link(stereo.left)
 monoRight.out.link(stereo.right)
@@ -89,7 +89,7 @@ stereo.depth.link(spatialLocationCalculator.inputDepth)
 spatialLocationCalculator.out.link(xoutSpatialData.input)
 xinSpatialCalcConfig.out.link(spatialLocationCalculator.inputConfig)
 
-################################
+###################################
 #Set camera and neural network properties
 
 # Next, we filter out the detections that are below a confidence threshold. Confidence can be anywhere between <0..1>
@@ -110,7 +110,7 @@ xout_nn = pipeline.createXLinkOut()
 xout_nn.setStreamName("nn")
 detection_nn.out.link(xout_nn.input)
 
-##################################################################
+#######################################
 #Get the UID from the database
 
 server = decouple.config('server',default='')
@@ -137,8 +137,6 @@ outpath_string = "Videos\\%s.mp4" %(UID)
 outpath = outpath_string
 out_video = cv2.VideoWriter(outpath, fourcc, 30.0, (300,300))
 
-
-
 # Pipeline is now finished, and we need to find an available device to run our pipeline
 # we are using context manager here that will dispose the device after we stop using it
 with depthai.Device(pipeline) as device:
@@ -157,7 +155,6 @@ with depthai.Device(pipeline) as device:
 
     #print("Use WASD keys to move ROI")
     i=0
-    ######################################
 
     # Here, some of the default values are defined. Frame will be an image from "rgb" stream, detections will contain nn results
     frame = None
@@ -184,7 +181,6 @@ with depthai.Device(pipeline) as device:
         counter = []
         sequence = []
         
-
         # we try to fetch the data from nn/rgb queues. tryGet will return either the data packet or None if there isn't any
         in_rgb = q_rgb.tryGet()
         in_nn = q_nn.tryGet()
@@ -199,7 +195,6 @@ with depthai.Device(pipeline) as device:
             detections = in_nn.detections
 
         if in_depthQueue is not None:
-                       ###########################
             inDepth = depthQueue.get() # Blocking call, will wait until a new data has arrived
             depthFrame = inDepth.getFrame() # depthFrame values are in millimeters
             #depthFrameColor = cv2.normalize(depthFrame, None, 255, 0, cv2.NORM_INF, cv2.CV_8UC1)
@@ -226,17 +221,13 @@ with depthai.Device(pipeline) as device:
                 #cv2.putText(frame, f"Y: {int(depthData.spatialCoordinates.y)} mm", (xmin + 10, ymin + 35), fontType, 0.5, 255)
                 #cv2.putText(frame, f"Z: {int(depthData.spatialCoordinates.z)} mm", (xmin + 10, ymin + 50), fontType, 0.5, 255)
 
-        
+################################
+# Business Logic for Detection Tracking
         if frame is not None:
-            
-            #############################
-            ##Business Logic for Detection Tracking
-            #############################
             for detection in detections:
                 
                 t_diff = time.time() - start_time
                 
-
                 # for each bounding box, we first normalize it to match the frame size
                 bbox = frameNorm(frame, (detection.xmin, detection.ymin, detection.xmax, detection.ymax))
                 coordinate_xmin = str(round(detection.xmin,2))
@@ -257,15 +248,13 @@ with depthai.Device(pipeline) as device:
                     
 #######################################
 #Add data to database
-##########################
+
                 color = text_label
                 uid = UID
                 height = depthData.depthAverage
                 seconds = t_time
                 inlist.append([color,uid,height,seconds,coordinate_xmin,coordinate_ymin])
 
-            
-################################################
                 counter.append(1)
                 conf = round(detection.confidence * 100,0)
 
