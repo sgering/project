@@ -8,6 +8,7 @@ import depthai
 import numpy as np
 import time
 import decouple
+import os
 
 import pyodbc
 
@@ -22,21 +23,18 @@ cam_rgb = pipeline.createColorCamera()
 cam_rgb.setPreviewSize(300, 300)  # 300x300 will be the preview frame size, available as 'preview' output of the node
 cam_rgb.setInterleaved(False)
 
-################################
-#spatialDetectionNetwork = pipeline.create(depthai.node.MobileNetSpatialDetectionNetwork)
-################################
-
 # Next, we want a neural network that will produce the detections
 detection_nn = pipeline.createMobileNetDetectionNetwork()
 # Blob is the Neural Network file, compiled for MyriadX. It contains both the definition and weights of the model
 # We're using a blobconverter tool to retreive the MobileNetSSD blob automatically from OpenVINO Model Zoo
 
-#detection_nn.setBlobPath(blobconverter.from_zoo(name='mobilenet-ssd', shaves=6))
-#detection_nn.setBlobPath("C:\\Users\\Isis\\AppData\\Local\\Programs\\DepthAI\\depthai\\resources\\nn\\custom_model_2_4\\custom_model.blob") #this is the path when using depth AI demo
-detection_nn.setBlobPath("C:\\scripts\\OpenCV_AI_Competetion\\project\\Model\\custom_model.blob")#this is a local version
+#Get the path to the model
+
+detection_nn.setBlobPath("Model\custom_model.blob")#this is a local version
 
 ################################
 # Define sources and outputs
+
 monoLeft = pipeline.create(depthai.node.MonoCamera)
 monoRight = pipeline.create(depthai.node.MonoCamera)
 stereo = pipeline.create(depthai.node.StereoDepth)
@@ -50,8 +48,8 @@ xoutDepth.setStreamName("depth")
 xoutSpatialData.setStreamName("spatialData")
 xinSpatialCalcConfig.setStreamName("spatialCalcConfig")
 ########################################
-
 # Properties
+
 monoLeft.setResolution(depthai.MonoCameraProperties.SensorResolution.THE_400_P)
 monoLeft.setBoardSocket(depthai.CameraBoardSocket.LEFT)
 monoRight.setResolution(depthai.MonoCameraProperties.SensorResolution.THE_400_P)
@@ -65,11 +63,9 @@ stereo.setDefaultProfilePreset(depthai.node.StereoDepth.PresetMode.HIGH_ACCURACY
 stereo.setLeftRightCheck(lrcheck)
 stereo.setSubpixel(subpixel)
 
-# Config
 
 #############################################
-#topLeft = depthai.Point2f(0.45, 0.45)
-#bottomRight = depthai.Point2f(0.5, 0.5)
+# Config the bounding box
 
 topLeft = depthai.Point2f(0.83, 0.52)
 bottomRight = depthai.Point2f(0.87, 0.57)
@@ -81,6 +77,7 @@ config.roi = depthai.Rect(topLeft, bottomRight)
 
 spatialLocationCalculator.inputConfig.setWaitForMessage(False)
 spatialLocationCalculator.initialConfig.addROI(config)
+
 ###############################################
 # Linking
 monoLeft.out.link(stereo.left)
@@ -93,7 +90,7 @@ spatialLocationCalculator.out.link(xoutSpatialData.input)
 xinSpatialCalcConfig.out.link(spatialLocationCalculator.inputConfig)
 
 ################################
-
+#Set camera and neural network properties
 
 # Next, we filter out the detections that are below a confidence threshold. Confidence can be anywhere between <0..1>
 detection_nn.setConfidenceThreshold(0.3)
@@ -115,26 +112,28 @@ detection_nn.out.link(xout_nn.input)
 
 ##################################################################
 #Get the UID from the database
-server = 'buckeyewildcats.database.windows.net'
-database = 'batterytracker'
+
+server = decouple.config('server',default='')
+database = decouple.config('database',default='')
 username = decouple.config('UserID',default='')
 password = decouple.config('password',default='') 
 
 cnxn = pyodbc.connect('DRIVER={SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
 cursor = cnxn.cursor()
-            # Insert Dataframe into SQL Server:
+
+# Insert Dataframe into SQL Server:
 query = """SELECT ID from bt_plan where starttime= (SELECT MAX(starttime) FROM bt_plan)""" 
-#print(query)
+
 cursor.execute(query)
 row = cursor.fetchone()
 UID = (row[0])
 
 #Video Writer
-#fourcc = cv2.VideoWriter_fourcc(*'XVID')
+
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-#outpath_string = "C:\\scripts\\OpenCV_AI_Competetion\\project\Videos\\%s.avi" %(UID)
-outpath_string = "C:\\scripts\\OpenCV_AI_Competetion\\project\Videos\\%s.mp4" %(UID)
-print(outpath_string)
+
+outpath_string = "Videos\\%s.mp4" %(UID)
+
 outpath = outpath_string
 out_video = cv2.VideoWriter(outpath, fourcc, 30.0, (300,300))
 
@@ -149,13 +148,14 @@ with depthai.Device(pipeline) as device:
     q_rgb = device.getOutputQueue("rgb")
     q_nn = device.getOutputQueue("nn")
     #######################################
-    #sg added spatial below
+    #get the depth info
+
     depthQueue = device.getOutputQueue(name="depth", maxSize=4, blocking=False)
     spatialCalcQueue = device.getOutputQueue(name="spatialData", maxSize=4, blocking=False)
     spatialCalcConfigInQueue = device.getInputQueue("spatialCalcConfig")
     color = (255, 255, 255)
 
-    print("Use WASD keys to move ROI")
+    #print("Use WASD keys to move ROI")
     i=0
     ######################################
 
@@ -175,10 +175,6 @@ with depthai.Device(pipeline) as device:
 
     start_time = time.time()  #start the timer
 
-    outfile = open('C:\\scripts\\OpenCV_AI_Competetion\\project\\stack.csv','w')
-    header = 'Disc_Number, Type\n'
-    outfile.write(header)
-    
     inlist = []
     
     # Main host-side application loop
@@ -213,11 +209,8 @@ with depthai.Device(pipeline) as device:
             spatialData = spatialCalcQueue.get().getSpatialLocations()
         
             for depthData in spatialData:
-                roi = depthData.config.roi
-                #roi = roi.denormalize(width=depthFrameColor.shape[1], height=depthFrameColor.shape[0])
-
-                
-                roi = roi.denormalize(width=300, height=300) #sg changed
+                roi = depthData.config.roi 
+                roi = roi.denormalize(width=300, height=300) 
                 xmin = int(roi.topLeft().x)
                 ymin = int(roi.topLeft().y)
                 xmax = int(roi.bottomRight().x)
@@ -225,10 +218,7 @@ with depthai.Device(pipeline) as device:
 
                 depthMin = depthData.depthMin
                 depthMax = depthData.depthMax
-                #valuestring = '%s, %s, %s, %s, %s' %(depthMin,depthMax,depthData.spatialCoordinates.z,depthData.depthAverage,depthData.depthAveragePixelCount)
-                #print(valuestring)
-
-                
+           
                 fontType = cv2.FONT_HERSHEY_TRIPLEX
                 #cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color, cv2.FONT_HERSHEY_SCRIPT_SIMPLEX)
                 #cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color, 1)
@@ -258,28 +248,16 @@ with depthai.Device(pipeline) as device:
 
                 ##Create an output file for reporting
                 if t_diff  >= 5 and len(stack_act)==0:
-                #if len(stack_temp)==1 and t_diff > 5:
-                    #print('got one')
                     stack_act.append(text_label)
-                    #print(stack_act)
-                    #print(depthData.depthAverage)
                     start_time = time.time()
 
                 elif t_diff  >= 5 and len(stack_act)>=1 :
-                    #print('got two')
                     stack_act.append(text_label)
-                    #print(stack_act)
-                    #print(depthData.depthAverage)
-                    #print(depthData.depthMin)
-                    #print(depthData.depthAveragePixelCount)
                     start_time = time.time()
-                    #outstring = ('%s,%s\n') %(len(stack_act),stack_act[-1])
-                    #outstring = str(outstring)
-                    #outfile.write(outstring)
                     
-                #######################################
-                #Add data to database
-                ##########################
+#######################################
+#Add data to database
+##########################
                 color = text_label
                 uid = UID
                 height = depthData.depthAverage
@@ -290,7 +268,7 @@ with depthai.Device(pipeline) as device:
 ################################################
                 counter.append(1)
                 conf = round(detection.confidence * 100,0)
-                #print(detection.label)
+
                 if detection.label == 3:
                     sequence.append('Red')
                     text_label ='Red '# + str(conf)
@@ -326,13 +304,9 @@ with depthai.Device(pipeline) as device:
         
         # at any time, you can press "q" and exit the main loop, therefore exiting the program itself
             if cv2.waitKey(1) & 0xFF == ord('q'):
-                
                 break
-            #if cv2.waitKey(1) == ord('q'):
            
             key = cv2.waitKey(1)
-            #if key == ord('q'):
-              #  break
             if key == ord('w'):
                 if topLeft.y - stepSize >= 0:
                     topLeft.y -= stepSize
@@ -361,7 +335,7 @@ with depthai.Device(pipeline) as device:
                 cfg.addROI(config)
                 spatialCalcConfigInQueue.send(cfg)
                 newConfig = False
-##                break
+
     final = ''
     for rec in inlist:
         
@@ -371,10 +345,8 @@ with depthai.Device(pipeline) as device:
     cnxn.commit()
             
     out_video.release()
-    outfile.close()
+  
     #close the database connection
     cursor.close()
 
-    #vid_upload = 'C:\\scripts\\OpenCV_AI_Competetion\\project\\bt_upload_video_store_db.py'
-    #print('Archiving Video to AMS')
-    #exec(open(vid_upload).read())
+
