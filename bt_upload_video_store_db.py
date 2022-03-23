@@ -84,7 +84,8 @@ client = AzureMediaServices(default_credential, os.getenv('SUBSCRIPTIONID'))
 print("Creating input asset " + in_asset_name)
 # From SDK
 # create_or_update(resource_group_name, account_name, asset_name, parameters, custom_headers=None, raw=False, **operation_config)
-inputAsset = client.assets.create_or_update( os.getenv("RESOURCEGROUP"), os.getenv("ACCOUNTNAME"), in_asset_name, input_asset)
+
+inputAsset = client.assets.create_or_update(os.getenv("RESOURCEGROUP"), os.getenv("ACCOUNTNAME"), in_asset_name, input_asset)
 
 # An AMS asset is a container with a specific id that has "asset-" prepended to the GUID.
 # So, you need to create the asset id to identify it as the container
