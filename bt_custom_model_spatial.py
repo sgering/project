@@ -248,11 +248,12 @@ with depthai.Device(pipeline) as device:
                     
 #######################################
 #Add data to database
-
+                
                 color = text_label
                 uid = UID
                 height = depthData.depthAverage
                 seconds = t_time
+                
                 inlist.append([color,uid,height,seconds,coordinate_xmin,coordinate_ymin])
 
                 counter.append(1)
@@ -293,6 +294,19 @@ with depthai.Device(pipeline) as device:
         
         # at any time, you can press "q" and exit the main loop, therefore exiting the program itself
             if cv2.waitKey(1) & 0xFF == ord('q'):
+                #final = ''
+                #insert_table = f"INSERT INTO [dbo].[bt_actual] VALUES (?,?,?,?,?,?)"
+                #for rec in inlist:   
+                #    query = """INSERT INTO [dbo].[bt_actual] ([color],[UID],[height],[seconds],[xcoord],[ycoord])VALUES(%s,'%s',%s,%s,%s,%s)""" %(rec[0],rec[1],rec[2],rec[3],rec[4],rec[5])
+                #    final = final + query +';'
+                
+                #Temp backup file for testing
+                #max rows for sql is 1000 https://stackoverflow.com/questions/37471803/sql-server-maximum-rows-that-can-be-inserted-in-a-single-insert-statment#:~:text=The%20Maximum%20number%20of%20rows,upto%201000%20rows.
+                #fileout = open('C:\\scripts\\OpenCV_AI_Competetion\\project\\outfile.sql','w')
+                #fileout.write(final)
+                #fileout.close()
+                #cursor.fast_executemany = True
+                #cursor.executemany(insert_table, inlist)
                 break
            
             key = cv2.waitKey(1)
@@ -325,13 +339,35 @@ with depthai.Device(pipeline) as device:
                 spatialCalcConfigInQueue.send(cfg)
                 newConfig = False
 
-    final = ''
-    for rec in inlist:
-        
-        query = """INSERT INTO [dbo].[bt_actual] ([color],[UID],[height],[seconds],[xcoord],[ycoord])VALUES(%s,'%s',%s,%s,%s,%s)""" %(rec[0],rec[1],rec[2],rec[3],rec[4],rec[5])
-        final = final + query +';'
-    cursor.execute(final)
-    cnxn.commit()
+    numrecords = len(inlist)
+    numrecords_report  = 'the number of records is %s' %numrecords
+    #Need to split the dataset into chunks for SQL due to query limit.
+
+    n = 500 #size of chunks
+    chunks = [] #list of chunks
+    counter = 0
+
+    for i in range(0, numrecords, n): 
+        chunks.append(inlist[i:i + n])
+    numchunks = len(chunks)
+    print('the number of chunks is %s' %numchunks)
+
+    for chunk in chunks:
+        counter = counter + 1
+
+        final = ''
+        for rec in chunk: 
+            query = """INSERT INTO [dbo].[bt_actual] ([color],[UID],[height],[seconds],[xcoord],[ycoord])VALUES(%s,'%s',%s,%s,%s,%s)""" %(rec[0],rec[1],rec[2],rec[3],rec[4],rec[5])
+            final = final + query +';'
+    
+    #Temp backup file for testing
+    #max rows for sql is 1000 https://stackoverflow.com/questions/37471803/sql-server-maximum-rows-that-can-be-inserted-in-a-single-insert-statment#:~:text=The%20Maximum%20number%20of%20rows,upto%201000%20rows.
+    #fileout = open('C:\\scripts\\OpenCV_AI_Competetion\\project\\outfile.sql','w')
+    #fileout.write(final)
+    #fileout.close()
+    #cursor.fast_executemany = True
+        cursor.execute(final)
+        cnxn.commit()
             
     out_video.release()
   
