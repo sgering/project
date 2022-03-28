@@ -27,3 +27,5 @@
 **PowerBI Report**
 - https://github.com/sgering/project/blob/master/PowerBI%20Report_SQL.pbix 
 
+**Video Intro**
+- https://youtu.be/daCZYxljVSs
