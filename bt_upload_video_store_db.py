@@ -46,7 +46,6 @@ cursor.execute(query)
 row = cursor.fetchone()
 UID = (row[0])
 
-#source_file = 'EA117892-A68E-4265-AE1A-48811BECA4C2.mp4'
 source_file = UID + '.mp4'
 
 
@@ -122,8 +121,10 @@ blob_client = blob_service_client.get_blob_client(in_container,source_file)
 #print(in_container) #this prints the input container
 ###########################################################
 
-#working_dir = os.getcwd()
-working_dir = "C:\\scripts\\OpenCV_AI_Competetion\\project\\Videos"
+working_dir = os.getcwd() + '\\Videos'
+print('Working directory is:  ')
+print(working_dir)
+
 
 #print("Current working directory:" + working_dir)
 upload_file_path = os.path.join(working_dir, source_file)
@@ -142,10 +143,9 @@ print('uploading file')
 #transform_name='MyTrans' + str(uniqueness)
 transform_name='StandardTransform_BatteryTracker'
 # From SDK
-# TransformOutput(*, preset, on_error=None, relative_priority=None, **kwargs) -> None
+
 #transform_output = TransformOutput(preset=BuiltInStandardEncoderPreset(preset_name="AdaptiveStreaming"))
 transform_output = TransformOutput(preset=BuiltInStandardEncoderPreset(preset_name="ContentAwareEncoding"))
-
 #print(transform_output)
 
 transform = Transform()
@@ -153,7 +153,7 @@ transform.outputs = [transform_output]
 
 print("Creating transform " + transform_name)
 # From SDK
-# Create_or_update(resource_group_name, account_name, transform_name, outputs, description=None, custom_headers=None, raw=False, **operation_config)
+
 transform = client.transforms.create_or_update(
   resource_group_name=os.getenv("RESOURCEGROUP"),
   account_name=os.getenv("ACCOUNTNAME"),
@@ -266,7 +266,7 @@ HTML = """
 </body>
 </html>
 """ %(URL)
-#print(URL)
+print(URL)
 #print(UID)
 #print(HTML)
 
