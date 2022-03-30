@@ -194,40 +194,11 @@ with depthai.Device(pipeline) as device:
             # when data from nn is received, we take the detections array that contains mobilenet-ssd results
             detections = in_nn.detections
 
-        if in_depthQueue is not None:
-            inDepth = depthQueue.get() # Blocking call, will wait until a new data has arrived
-            depthFrame = inDepth.getFrame() # depthFrame values are in millimeters
-            #depthFrameColor = cv2.normalize(depthFrame, None, 255, 0, cv2.NORM_INF, cv2.CV_8UC1)
-            #depthFrameColor = cv2.equalizeHist(depthFrameColor)
-            #depthFrameColor = cv2.applyColorMap(depthFrameColor, cv2.COLORMAP_RAINBOW )
-##
-            spatialData = spatialCalcQueue.get().getSpatialLocations()
-        
-            for depthData in spatialData:
-                roi = depthData.config.roi 
-                roi = roi.denormalize(width=300, height=300) 
-                xmin = int(roi.topLeft().x)
-                ymin = int(roi.topLeft().y)
-                xmax = int(roi.bottomRight().x)
-                ymax = int(roi.bottomRight().y)
-
-                depthMin = depthData.depthMin
-                depthMax = depthData.depthMax
-           
-                fontType = cv2.FONT_HERSHEY_TRIPLEX
-                #cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color, cv2.FONT_HERSHEY_SCRIPT_SIMPLEX)
-                #cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color, 1)
-                #cv2.putText(frame, f"X: {int(depthData.spatialCoordinates.x)} mm", (xmin + 10, ymin + 20), fontType, 0.5, 255)
-                #cv2.putText(frame, f"Y: {int(depthData.spatialCoordinates.y)} mm", (xmin + 10, ymin + 35), fontType, 0.5, 255)
-                #cv2.putText(frame, f"Z: {int(depthData.spatialCoordinates.z)} mm", (xmin + 10, ymin + 50), fontType, 0.5, 255)
-
-################################
-# Business Logic for Detection Tracking
+        ################################
+        # Business Logic for Detection Tracking
         if frame is not None:
             for detection in detections:
-                
                 t_diff = time.time() - start_time
-                
                 # for each bounding box, we first normalize it to match the frame size
                 bbox = frameNorm(frame, (detection.xmin, detection.ymin, detection.xmax, detection.ymax))
                 coordinate_xmin = str(round(detection.xmin,2))
@@ -237,17 +208,35 @@ with depthai.Device(pipeline) as device:
                 
                 stack_temp.append(text_label)
 
-                ##Create an output file for reporting
-                if t_diff  >= 5 and len(stack_act)==0:
-                    stack_act.append(text_label)
-                    start_time = time.time()
+                if in_depthQueue is not None and detection.xmin >0.6:
+                    inDepth = depthQueue.get() # Blocking call, will wait until a new data has arrived
+                    depthFrame = inDepth.getFrame() # depthFrame values are in millimeters
+                    #depthFrameColor = cv2.normalize(depthFrame, None, 255, 0, cv2.NORM_INF, cv2.CV_8UC1)
+                    #depthFrameColor = cv2.equalizeHist(depthFrameColor)
+                    #depthFrameColor = cv2.applyColorMap(depthFrameColor, cv2.COLORMAP_RAINBOW )
+       
+                    spatialData = spatialCalcQueue.get().getSpatialLocations()
+                
+                    for depthData in spatialData:
+                        roi = depthData.config.roi 
+                        roi = roi.denormalize(width=300, height=300) 
+                        xmin = int(roi.topLeft().x)
+                        ymin = int(roi.topLeft().y)
+                        xmax = int(roi.bottomRight().x)
+                        ymax = int(roi.bottomRight().y)
 
-                elif t_diff  >= 5 and len(stack_act)>=1 :
-                    stack_act.append(text_label)
-                    start_time = time.time()
-                    
-#######################################
-#Add data to database
+                        depthMin = depthData.depthMin
+                        depthMax = depthData.depthMax
+                
+                        fontType = cv2.FONT_HERSHEY_TRIPLEX
+                        #cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color, cv2.FONT_HERSHEY_SCRIPT_SIMPLEX)
+                        #cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color, 1)
+                        #cv2.putText(frame, f"X: {int(depthData.spatialCoordinates.x)} mm", (xmin + 10, ymin + 20), fontType, 0.5, 255)
+                        #cv2.putText(frame, f"Y: {int(depthData.spatialCoordinates.y)} mm", (xmin + 10, ymin + 35), fontType, 0.5, 255)
+                        #cv2.putText(frame, f"Z: {int(depthData.spatialCoordinates.z)} mm", (xmin + 10, ymin + 50), fontType, 0.5, 255)
+
+                #######################################
+                #Add data to database
                 
                 color = text_label
                 uid = UID
@@ -261,13 +250,13 @@ with depthai.Device(pipeline) as device:
 
                 if detection.label == 3:
                     sequence.append('Red')
-                    text_label ='Red '# + str(conf)
+                    text_label ='Red '
                 elif detection.label == 2:
                     sequence.append('Blue')
-                    text_label ='Blue '# + str(conf)
+                    text_label ='Blue '
                 elif detection.label == 1:
-                    sequence.append('Black')  #black=1
-                    text_label ='Black ' #+ str(conf)
+                    sequence.append('Black') 
+                    text_label ='Black ' 
                 
                 # and then draw a rectangle on the frame to show the actual result
                 cv2.rectangle(frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 0, 0), 1)
@@ -278,35 +267,16 @@ with depthai.Device(pipeline) as device:
                 #cv2.putText(frame, f"X: {int(depthData.spatialCoordinates.x)} mm", (xmin + 10, ymin + 20), fontType, 0.5, 255)
                 #cv2.putText(frame, f"Y: {int(depthData.spatialCoordinates.y)} mm", (xmin + 10, ymin + 35), fontType, 0.5, 255)
                 #cv2.putText(frame, f"Z: {int(depthData.spatialCoordinates.z)} mm", (xmin + 10, ymin + 50), fontType, 0.5, 255)
-                cv2.putText(frame, f"{int(depthData.spatialCoordinates.z)} mm", (xmin + 10, ymin + 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255)
-
+                #cv2.putText(frame, f"{int(depthData.spatialCoordinates.z)} mm", (xmin + 10, ymin + 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255)
 
             # After all the drawing is finished, we show the frame on the screen
             cv2.imshow("preview", frame)
-            #outstring_count = 'number of discs is:  %s '%(sum(counter))
-            #outstring_seq = 'sequence is:  %s '%(sequence)
-            #print(outstring_count)
-            #qprint(outstring_seq)
             #cv2.putText(frame, outstring_count, (10, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (36,255,12), 1)
             #cv2.putText(frame, outstring_seq, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (36,255,12), 1)
             out_video.write(frame)
 
-        
         # at any time, you can press "q" and exit the main loop, therefore exiting the program itself
             if cv2.waitKey(1) & 0xFF == ord('q'):
-                #final = ''
-                #insert_table = f"INSERT INTO [dbo].[bt_actual] VALUES (?,?,?,?,?,?)"
-                #for rec in inlist:   
-                #    query = """INSERT INTO [dbo].[bt_actual] ([color],[UID],[height],[seconds],[xcoord],[ycoord])VALUES(%s,'%s',%s,%s,%s,%s)""" %(rec[0],rec[1],rec[2],rec[3],rec[4],rec[5])
-                #    final = final + query +';'
-                
-                #Temp backup file for testing
-                #max rows for sql is 1000 https://stackoverflow.com/questions/37471803/sql-server-maximum-rows-that-can-be-inserted-in-a-single-insert-statment#:~:text=The%20Maximum%20number%20of%20rows,upto%201000%20rows.
-                #fileout = open('C:\\scripts\\OpenCV_AI_Competetion\\project\\outfile.sql','w')
-                #fileout.write(final)
-                #fileout.close()
-                #cursor.fast_executemany = True
-                #cursor.executemany(insert_table, inlist)
                 break
            
             key = cv2.waitKey(1)
@@ -359,13 +329,7 @@ with depthai.Device(pipeline) as device:
         for rec in chunk: 
             query = """INSERT INTO [dbo].[bt_actual] ([color],[UID],[height],[seconds],[xcoord],[ycoord])VALUES(%s,'%s',%s,%s,%s,%s)""" %(rec[0],rec[1],rec[2],rec[3],rec[4],rec[5])
             final = final + query +';'
-    
-    #Temp backup file for testing
-    #max rows for sql is 1000 https://stackoverflow.com/questions/37471803/sql-server-maximum-rows-that-can-be-inserted-in-a-single-insert-statment#:~:text=The%20Maximum%20number%20of%20rows,upto%201000%20rows.
-    #fileout = open('C:\\scripts\\OpenCV_AI_Competetion\\project\\outfile.sql','w')
-    #fileout.write(final)
-    #fileout.close()
-    #cursor.fast_executemany = True
+
         cursor.execute(final)
         cnxn.commit()
             
