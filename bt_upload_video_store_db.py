@@ -71,8 +71,8 @@ out_description = 'outputdescription' + str(uniqueness)
 # From the SDK
 # Asset(*, alternate_id: str = None, description: str = None, container: str = None, storage_account_name: str = None, **kwargs) -> None
 output_asset = Asset(alternate_id=out_alternate_id,description=out_description)
-print('the output asset is:')
-print(output_asset)
+#print('the output asset is:')
+#print(output_asset)
 
 # The AMS Client
 print("Creating AMS client")
@@ -99,11 +99,11 @@ print("Creating output asset " + out_asset_name)
 # From SDK
 # create_or_update(resource_group_name, account_name, asset_name, parameters, custom_headers=None, raw=False, **operation_config)
 outputAsset = client.assets.create_or_update(os.getenv("RESOURCEGROUP"), os.getenv("ACCOUNTNAME"), out_asset_name, output_asset)
-print('output asset')
-print(outputAsset)
+#print('output asset')
+#print(outputAsset)
 out_continer  = 'asset-' + outputAsset.asset_id
-print('output continer')
-print(out_continer)
+#print('output continer')
+#print(out_continer)
 
 #print(out_asset_name)
 #print(outputAsset)
@@ -125,7 +125,7 @@ blob_client = blob_service_client.get_blob_client(in_container,source_file)
 #working_dir = os.getcwd()
 working_dir = "C:\\scripts\\OpenCV_AI_Competetion\\project\\Videos"
 
-print("Current working directory:" + working_dir)
+#print("Current working directory:" + working_dir)
 upload_file_path = os.path.join(working_dir, source_file)
 
 # WARNING: Depending on where you are launching the sample from, the path here could be off, and not include the BasicEncoding folder. 
@@ -221,13 +221,13 @@ countdown(int(time_in_seconds))
 #Azure adds a suffix to the name so we need to get the 
 #exact filename from the asset
 ########################################################
-#container_client = blob_service_client.get_container_client("asset-c78e2f02-6671-4a9a-974b-92ec3b5b5dae")
+
 container_client = blob_service_client.get_container_client(out_continer)
 
 blob_list = container_client.list_blobs()
 
 for blob in blob_list:
-    print(blob.name)
+    #print(blob.name)
     suffix = ".mp4"
     if blob.name.endswith(".mp4"):
         output_video_name = blob.name 
@@ -238,11 +238,7 @@ print(output_video_name)
 
 account_name = os.getenv("STORAGEACCOUNTNAME")
 account_key = os.getenv("STORAGEACCOUNTKEY")
-#container_name = 'asset-f928fc26-1431-456f-b314-e7c6f520b405'
 container_name = out_continer
-
-#blob_name = 'output_Trim.mp4'  #how to create the .mp4 from the blob in Azure is next
-#blob_name = 'SampleVideoWthRobot_300x300_AACAudio_247.mp4'
 
 blob_name = output_video_name  #use the name created from the job in the blob
 def get_blob_sas(account_name,account_key, container_name, blob_name):
@@ -257,10 +253,7 @@ def get_blob_sas(account_name,account_key, container_name, blob_name):
 blob = get_blob_sas(account_name,account_key, container_name, blob_name)
 #print(blob)
 URL = ''
-#url = 'https://'+account_name+'.blob.core.windows.net/'+container_name+'/'+blob_name+'?'+blob
 URL = 'https://'+account_name+'.blob.core.windows.net/'+container_name+'/'+blob_name+'?'+blob
-
-
 
 
 HTML = """
@@ -273,12 +266,12 @@ HTML = """
 </body>
 </html>
 """ %(URL)
-print(URL)
-print(UID)
-print(HTML)
+#print(URL)
+#print(UID)
+#print(HTML)
 
 video_query = """INSERT INTO [dbo].[bt_video]([UID],[URL],[HTML])VALUES('%s','%s','%s')""" %(UID,URL,HTML)
-print(video_query)
+#print(video_query)
 cursor.execute(video_query)
 cnxn.commit()
 cursor.close()
